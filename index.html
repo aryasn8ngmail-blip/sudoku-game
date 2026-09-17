@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f1115">
+  <title>Sudoku Master</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- PWA Install Banner -->
+    <div id="install-banner" class="hidden">
+      <span>Add Sudoku Master to your Home Screen!</span>
+      <div class="banner-buttons">
+        <button id="install-btn" class="btn btn-sm btn-accent">Install</button>
+        <button id="dismiss-install-btn" class="btn btn-sm btn-icon">✕</button>
+      </div>
+    </div>
+
+    <!-- Generating Overlay -->
+    <div id="loading-overlay" class="overlay hidden">
+      <div class="spinner"></div>
+      <div class="loading-text">Generating Puzzle...</div>
+    </div>
+
+    <!-- Screen Containers -->
+    <div id="home-screen" class="screen active">
+      <header class="home-header">
+        <h1 class="logo-title">SUDOKU MASTER</h1>
+        <p class="logo-sub">Mobile Offline Sudoku</p>
+      </header>
+      <div class="home-menu">
+        <button id="btn-continue" class="btn btn-gradient btn-lg hidden">Continue Game</button>
+        <button id="btn-story" class="btn btn-primary btn-lg">Story Mode</button>
+        <button id="btn-endless" class="btn btn-secondary btn-lg">Endless Mode</button>
+        <button id="btn-stats" class="btn btn-secondary btn-lg">Stats</button>
+        <button id="btn-settings" class="btn btn-secondary btn-lg">Settings</button>
+      </div>
+    </div>
+
+    <!-- Levels Screen -->
+    <div id="levels-screen" class="screen hidden">
+      <header class="screen-header">
+        <button id="btn-levels-back" class="btn btn-icon">←</button>
+        <h2>Story Mode</h2>
+        <div style="width: 40px;"></div>
+      </header>
+      <div id="levels-container" class="levels-content">
+        <!-- Rendered by ui.js -->
+      </div>
+    </div>
+
+    <!-- Endless Mode Picker Screen -->
+    <div id="endless-screen" class="screen hidden">
+      <header class="screen-header">
+        <button id="btn-endless-back" class="btn btn-icon">←</button>
+        <h2>Endless Mode</h2>
+        <div style="width: 40px;"></div>
+      </header>
+      <div class="endless-content">
+        <p class="section-desc">Select a difficulty for infinite puzzles:</p>
+        <div class="difficulty-grid">
+          <button data-diff="easy" class="btn btn-card btn-easy">
+            <span class="diff-title">Easy</span>
+            <span class="diff-desc">35 Empty Cells</span>
+          </button>
+          <button data-diff="medium" class="btn btn-card btn-medium">
+            <span class="diff-title">Medium</span>
+            <span class="diff-desc">42 Empty Cells</span>
+          </button>
+          <button data-diff="hard" class="btn btn-card btn-hard">
+            <span class="diff-title">Hard</span>
+            <span class="diff-desc">49 Empty Cells</span>
+          </button>
+          <button data-diff="expert" class="btn btn-card btn-expert">
+            <span class="diff-title">Expert</span>
+            <span class="diff-desc">56 Empty Cells</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen hidden">
+      <header class="game-header">
+        <button id="btn-game-back" class="btn btn-icon">←</button>
+        <div class="game-info">
+          <div id="game-level-label" class="game-label">Level 1</div>
+          <div class="game-meta">
+            <span id="game-timer" class="game-timer">00:00</span>
+            <span id="game-mistakes" class="game-mistakes">✕ 0/3</span>
+          </div>
+        </div>
+        <button id="btn-game-pause" class="btn btn-icon">⏸</button>
+      </header>
+
+      <div class="progress-bar-container">
+        <div id="game-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+      </div>
+
+      <main class="board-container">
+        <div id="sudoku-board" class="sudoku-grid">
+          <!-- 81 cells populated by JS -->
+        </div>
+      </main>
+
+      <section class="controls-container">
+        <div class="tools-row">
+          <button id="btn-undo" class="btn btn-tool" title="Undo">
+            <span class="tool-icon">↩</span>
+            <span class="tool-label">Undo</span>
+          </button>
+          <button id="btn-erase" class="btn btn-tool" title="Erase">
+            <span class="tool-icon">⌫</span>
+            <span class="tool-label">Erase</span>
+          </button>
+          <button id="btn-notes" class="btn btn-tool" title="Notes">
+            <span class="tool-icon">✎</span>
+            <span class="tool-label">Notes</span>
+          </button>
+          <button id="btn-hint" class="btn btn-tool btn-pulse" title="Hint">
+            <span class="tool-icon">💡</span>
+            <span class="tool-label">Hint (<span id="hint-count">3</span>)</span>
+          </button>
+        </div>
+
+        <div id="numpad" class="numpad-grid">
+          <button data-num="1" class="btn btn-num">1</button>
+          <button data-num="2" class="btn btn-num">2</button>
+          <button data-num="3" class="btn btn-num">3</button>
+          <button data-num="4" class="btn btn-num">4</button>
+          <button data-num="5" class="btn btn-num">5</button>
+          <button data-num="6" class="btn btn-num">6</button>
+          <button data-num="7" class="btn btn-num">7</button>
+          <button data-num="8" class="btn btn-num">8</button>
+          <button data-num="9" class="btn btn-num">9</button>
+          <button id="btn-num-erase" class="btn btn-num btn-num-erase">⌫</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="pause-modal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Game Paused</h3>
+        <div class="modal-actions">
+          <button id="btn-pause-resume" class="btn btn-gradient btn-lg">Resume</button>
+          <button id="btn-pause-restart" class="btn btn-secondary btn-lg">Restart Level</button>
+          <button id="btn-pause-quit" class="btn btn-secondary btn-lg">Quit Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal hidden">
+      <div class="modal-card win-card">
+        <h2 id="win-title">Level Completed!</h2>
+        <div id="win-stars" class="win-stars">☆☆☆</div>
+        <div class="win-stats">
+          <div class="win-stat-item">
+            <span class="stat-lbl">Time</span>
+            <span id="win-time" class="stat-val">00:00</span>
+          </div>
+          <div class="win-stat-item">
+            <span class="stat-lbl">Mistakes</span>
+            <span id="win-mistakes" class="stat-val">0/3</span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-win-next" class="btn btn-gradient btn-lg">Next Level</button>
+          <button id="btn-win-levels" class="btn btn-secondary btn-lg">Back to Levels</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen hidden">
+      <header class="screen-header">
+        <button id="btn-settings-back" class="btn btn-icon">←</button>
+        <h2>Settings</h2>
+        <div style="width: 40px;"></div>
+      </header>
+      <div class="settings-content">
+        <div class="setting-item">
+          <span>Sound Effects</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-sound" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>Vibration</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-vibration" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>Highlight Same Numbers</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-highlight" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>Auto-Remove Notes</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-autonotes" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>Dark Mode</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-darkmode" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-danger">
+          <button id="btn-reset-progress" class="btn btn-danger">Reset All Progress</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Screen -->
+    <div id="stats-screen" class="screen hidden">
+      <header class="screen-header">
+        <button id="btn-stats-back" class="btn btn-icon">←</button>
+        <h2>Statistics</h2>
+        <div style="width: 40px;"></div>
+      </header>
+      <div id="stats-container" class="stats-content">
+        <!-- Rendered by ui.js -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/ui.js"></script>
+</body>
+</html>
